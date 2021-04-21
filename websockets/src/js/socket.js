@@ -1,6 +1,3 @@
-//const socket = io.connect('https://alcochat.herokuapp.com/');
-//const socket = io.connect('localhost:9000');
-
 const default_textarea = $('textarea').height();
 
 let user_id = Math.ceil(Math.random() * 999999);
@@ -14,8 +11,9 @@ let socket = new WebSocket("ws://localhost:3001");
 
 socket.onopen = function(e) {
     console.log("[open] Соединение установлено");
-    console.log("Отправляем данные на сервер");
-    socket.send("Меня зовут Джон");
+    socket.send(JSON.stringify({
+        "action": "send_chat"
+    }))
 };
 
 socket.onmessage = function(event) {
@@ -29,6 +27,7 @@ socket.onmessage = function(event) {
             apppend_message(
                 data.messages[i].text,
                 data.messages[i].name,
+                data.messages[i].avatar,
                 data.messages[i].user_id == user_id
             );
         }
@@ -49,15 +48,9 @@ socket.onerror = function(error) {
     console.log(`[error] ${error.message}`);
 };
 
-// socket.on('all mess', function(data, users) {
-//     $('.chat').empty();
-//     for (let i in data) {
-//         apppend_message(data[i].mess, users[data[i].id].name,
-//             users[data[i].id].ava, data[i].id == user_id);
-//     }
-// });
 
 let block = document.querySelector('.chat');
+
 block.scrollTop = block.scrollHeight;
 
 $('.send-message-form').submit((event) => {
@@ -87,17 +80,13 @@ $('textarea').keydown((e) => {
     }
 });
 
-function pressed(e) {
-    console.log(e);
-}
-
-function apppend_message(text, name, my = true) {
+function apppend_message(text, name, avatar, my = true) {
 
     $('.chat')
         .append('<section class="animated fadeIn animate__faster message' +
             (my ? ' my' : '') + '">\n' +
             '                <img width="50" height="50"\n' +
-            '                     src=http://placehold.it/50x50" alt="avatar">\n' +
+            '                     src="'+ avatar +'" alt="avatar">\n' +
             '                <div class="content"><h3 style="color: yellow">' +
             name + '</h3>\n' +
             '                    <p>' + text.split('<')

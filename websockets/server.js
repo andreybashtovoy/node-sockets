@@ -43,8 +43,19 @@ var webSocketServer = new WebSocketServer.Server({
 });
 
 const NAMES = ["Семён", "Анатолий", "Олег", "Калыван", "Валера"]
+const AVATARS = [
+    "/avatars/1.jpg",
+    "/avatars/2.jpg",
+    "/avatars/3.jpg",
+    "/avatars/4.jpg",
+    "/avatars/5.jpg",
+    "/avatars/6.jpg",
+    "/avatars/7.jpg"
+]
+
 const MESSAGES = []
 const USERS = {}
+
 
 webSocketServer.on('connection', function(ws) {
 
@@ -68,6 +79,8 @@ webSocketServer.on('connection', function(ws) {
                 })
 
                 send_chat()
+            }else if(data.action === "send_chat"){
+                send_chat()
             }
         }catch(e){}
     });
@@ -84,7 +97,7 @@ const check_user = (user_id) => {
     if(!(user_id in USERS)){
         USERS[user_id] = {
             name: NAMES[Math.floor(Math.random() * NAMES.length)],
-            avatar: ""
+            avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)]
         }
     }
 }
