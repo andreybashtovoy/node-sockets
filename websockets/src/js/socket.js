@@ -3,23 +3,36 @@
 
 const default_textarea = $('textarea').height();
 
-let user_id;
+let user_id = Math.ceil(Math.random() * 999999);
 
-if (localStorage.getItem('user_id') == undefined) {
-    localStorage.setItem('user_id', Math.ceil(Math.random() * 999999));
-}
-user_id = localStorage.getItem('user_id');
+// if (localStorage.getItem('user_id') == undefined) {
+//     localStorage.setItem('user_id', Math.ceil(Math.random() * 999999));
+// }
+// user_id = localStorage.getItem('user_id');
 
 let socket = new WebSocket("ws://localhost:3001");
 
 socket.onopen = function(e) {
-    alert("[open] Соединение установлено");
-    alert("Отправляем данные на сервер");
+    console.log("[open] Соединение установлено");
+    console.log("Отправляем данные на сервер");
     socket.send("Меня зовут Джон");
 };
 
 socket.onmessage = function(event) {
     console.log(`[message] Данные получены с сервера: ${event.data}`);
+
+    let data = JSON.parse(event.data)
+
+    if(data.action === 'all_messages'){
+        $('.chat').empty();
+        for (let i in data.messages) {
+            apppend_message(
+                data.messages[i].text,
+                data.messages[i].name,
+                data.messages[i].user_id == user_id
+            );
+        }
+    }
 };
 
 socket.onclose = function(event) {
@@ -51,9 +64,16 @@ $('.send-message-form').submit((event) => {
     event.preventDefault();
     if (/\S/.test($('.send-message-textarea').val())) {
         if (!$('.send-message-textarea').val()) return;
-        //apppend_message($('.send-message-textarea').val(), name, ava);
-        socket.emit('send mess',
-            {mess: $('.send-message-textarea').val(), id: user_id});
+        apppend_message($('.send-message-textarea').val(), name);
+        // socket.emit('send mess',
+        //     {mess: $('.send-message-textarea').val(), id: user_id});
+
+        socket.send(JSON.stringify({
+            action: 'chat_message',
+            message: $('.send-message-textarea').val(),
+            user_id: user_id
+        }))
+
         $('.send-message-textarea').val('');
         $('textarea').height(default_textarea);
         $('textarea').focus();
@@ -71,13 +91,13 @@ function pressed(e) {
     console.log(e);
 }
 
-function apppend_message(text, name, ava, my = true) {
+function apppend_message(text, name, my = true) {
 
     $('.chat')
         .append('<section class="animated fadeIn animate__faster message' +
             (my ? ' my' : '') + '">\n' +
             '                <img width="50" height="50"\n' +
-            '                     src="bomji/' + ava + '.jpg" alt="avatar">\n' +
+            '                     src=http://placehold.it/50x50" alt="avatar">\n' +
             '                <div class="content"><h3 style="color: yellow">' +
             name + '</h3>\n' +
             '                    <p>' + text.split('<')

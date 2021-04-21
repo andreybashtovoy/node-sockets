@@ -42,6 +42,10 @@ var webSocketServer = new WebSocketServer.Server({
     port: 3001
 });
 
+const NAMES = ["Семён", "Анатолий", "Олег", "Калыван", "Валера"]
+const MESSAGES = []
+const USERS = {}
+
 webSocketServer.on('connection', function(ws) {
 
     var id = Math.random();
@@ -51,9 +55,21 @@ webSocketServer.on('connection', function(ws) {
     ws.on('message', function(message) {
         console.log('получено сообщение ' + message);
 
-        for (var key in clients) {
-            clients[key].send(message);
-        }
+        try {
+            let data = JSON.parse(message)
+
+            if(data.action === "chat_message"){
+
+                check_user(data.user_id)
+
+                MESSAGES.push({
+                    text: data.message,
+                    user_id: data.user_id
+                })
+
+                send_chat()
+            }
+        }catch(e){}
     });
 
     ws.on('close', function() {
@@ -62,3 +78,35 @@ webSocketServer.on('connection', function(ws) {
     });
 
 });
+
+
+const check_user = (user_id) => {
+    if(!(user_id in USERS)){
+        USERS[user_id] = {
+            name: NAMES[Math.floor(Math.random() * NAMES.length)],
+            avatar: ""
+        }
+    }
+}
+
+
+const send_chat = () => {
+
+    let chat = []
+
+    for(let message of MESSAGES){
+        chat.push({
+            "text": message.text,
+            "avatar": USERS[message.user_id].avatar,
+            "name": USERS[message.user_id].name,
+            "user_id": message.user_id
+        })
+    }
+
+    for (let key in clients) {
+        clients[key].send(JSON.stringify({
+            action: 'all_messages',
+            messages: chat
+        }));
+    }
+}
