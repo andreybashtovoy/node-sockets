@@ -1,26 +1,30 @@
-const textarea = $('textarea');
-
-const default_textarea = textarea.height();
-
+// Генерация ID пользователя на стороне клиента
 let user_id = Math.ceil(Math.random() * 999999).toString(16);
 
+// Инициализация WebSocket с указанием хоста и порта сервера
 let socket = new WebSocket('ws://localhost:3001');
 
+// Срабатывает при успешном открытии соединения с сервером
 socket.onopen = () => {
     console.log('[open] Соединение установлено');
+
+    // Отправляем на сервер запрос с просьбой отправить все сообщения из чата
     socket.send(JSON.stringify({
         'action': 'send_chat',
     }));
 };
 
-socket.onmessage = function(event) {
+
+// Срабатывает при получении данных из сервера
+socket.onmessage = (event) => {
     console.log(`[message] Данные получены с сервера: ${event.data}`);
 
     let data = JSON.parse(event.data);
 
+    //Если сервер прислал все сообщения из чата
     if (data.action === 'all_messages') {
-        $('.chat').empty();
-        for (let i in data.messages) {
+        $('.chat').empty(); // Очищаем чат
+        for (let i in data.messages) { // В цикле выводим все сообщения в чат
             if (data.messages.hasOwnProperty(i)) {
                 apppend_message(
                     data.messages[i].text,
@@ -33,31 +37,41 @@ socket.onmessage = function(event) {
     }
 };
 
-socket.onclose = function(event) {
+
+// Срабатывает при закрытии соединения с сервером
+socket.onclose = (event) => {
     if (event.wasClean) {
         console.log(
             `[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
     } else {
-        // например, сервер убил процесс или сеть недоступна
-        // обычно в этом случае event.code 1006
         console.log('[close] Соединение прервано');
     }
 };
 
+// Срабатывает при ошибке
 socket.onerror = (error) => {
     console.log(`[error] ${error.message}`);
 };
 
-let block = document.querySelector('.chat');
 
+// Объявление переменных для работы с DOM
+let block = document.querySelector('.chat');
 block.scrollTop = block.scrollHeight;
+
+const textarea = $('textarea');
+
+const default_textarea = textarea.height();
 
 const sendMessageTextarea = $('.send-message-textarea');
 
+
+// Срабатывает при отправке сообщения пользователем
 $('.send-message-form').submit((event) => {
     event.preventDefault();
     if (/\S/.test(sendMessageTextarea.val())) {
         if (!$('.send-message-textarea').val()) return;
+
+        // Отправка
         socket.send(JSON.stringify({
             action: 'chat_message',
             message: sendMessageTextarea.val(),
@@ -70,6 +84,8 @@ $('.send-message-form').submit((event) => {
     }
 });
 
+
+// Для возможности отправки сообщения через Enter
 textarea.keydown((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -77,6 +93,8 @@ textarea.keydown((e) => {
     }
 });
 
+
+// Добавляет сообщение в чат
 const apppend_message = (text, name, avatar, my = true) => {
 
     $('.chat')
