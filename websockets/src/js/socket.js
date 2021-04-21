@@ -95,5 +95,5 @@ const apppend_message = (text, name, avatar, my = true) => {
             '            </section>');
     const block = document.querySelector('.chat');
     block.scrollTop = block.scrollHeight;
-}
+};
 
