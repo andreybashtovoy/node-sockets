@@ -2,15 +2,13 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const WebSocket = require('ws')
-const UUID = require('uuid')
-
 const host = 'localhost';
 const port = '8000';
 
 const requestListener = (req, res) => {
     const contentPath = path.join(__dirname,
         'src/', req.url === '/' ? 'index.html' : req.url);
+
 
     fs.readFile(contentPath, (err, data) => {
         if (err) {
@@ -32,13 +30,13 @@ server.listen(port, host, () => {
 
 
 
-var WebSocketServer = new require('ws');
+const WebSocketServer = require('ws');
 
 // подключённые клиенты
-var clients = {};
+const clients = {};
 
 // WebSocket-сервер на порту 8081
-var webSocketServer = new WebSocketServer.Server({
+const webSocketServer = new WebSocketServer.Server({
     port: 3001
 });
 
@@ -59,7 +57,7 @@ const USERS = {}
 
 webSocketServer.on('connection', function(ws) {
 
-    var id = Math.random();
+    const id = Math.random();
     clients[id] = ws;
     console.log("новое соединение " + id);
 
