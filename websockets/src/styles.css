@@ -69,55 +69,20 @@ img {
     font-family: 'NanamiRoundedW01-Medium';
 }
 
-/**/
-
-body {
-    display: flex;
-    flex-direction: column;
-}
-
-/*main*/
-main {
-    margin-top: 50px;
-    flex-grow: 1;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/*header*/
-header {
-    display: flex;
-    position: relative;
-    background-color: #ff3758;
-    text-align: center;
-    min-height: 80px;
-    font-size: 2rem;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 0 5px 3px black;
-    border-bottom: 3px solid white;
-    overflow: hidden;
-    z-index: 99999999;
-}
-
-header h2:hover {
-    transition: 0.2s;
-    cursor: default;
-    color: #0f6674;
-}
 
 /*chat-container*/
 .chat-container {
-    width: 600px;
-    position: relative;
-    margin-top: auto;
+    width: 100%;
+    background-color: #4e5a61;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px #3c3c3c;
 }
 
 .container {
     flex-grow: 1;
+    width: 100%;
+    background-color: #4e5a61;
 }
 
 /*chat*/
@@ -126,10 +91,9 @@ header h2:hover {
     flex-direction: column;
     overflow-y: auto;
     width: 100%;
-    border: 3px solid #ff3758;
     border-bottom: none;
     border-radius: 10px 10px 0 0;
-    height: 500px !important;
+    height: calc(100vh - 60px);
     position: relative;
 }
 
@@ -137,15 +101,6 @@ header h2:hover {
     display: none;
 }
 
-/*polyana*/
-.polyana {
-    width: 100%;
-    height: 500px;
-    position: absolute;
-    filter: blur(5px) brightness(50%);
-    left: 0;
-    top: 0;
-}
 
 /*message*/
 .message {
@@ -167,9 +122,14 @@ header h2:hover {
     margin-left: 10px;
     color: white;
     padding: 5px;
-    background-color: rgba(12, 84, 96, 0.5);
+    background-color: #7996a7;
     border-radius: 8px;
-    box-shadow: 5px 5px 9px 1px black;
+    #box-shadow: 2px 2px 5px 1px black;
+}
+
+.message h3{
+    color: #191f21 !important;
+    text-shadow: 0 0 1px #868686;
 }
 
 .message .content p {
@@ -185,7 +145,7 @@ header h2:hover {
     width: 0;
     height: 0;
     border-top: 5px solid transparent;
-    border-right: 10px solid rgba(12, 84, 96, 0.5);
+    border-right: 10px solid #7996a7;
     border-bottom: 5px solid transparent;
 }
 
@@ -196,7 +156,7 @@ header h2:hover {
 }
 
 .my .content {
-    background-color: rgba(0, 210, 219, 0.5);
+    background-color: #7996a7;
     margin-left: 0;
     margin-right: 10px;
 }
@@ -205,18 +165,18 @@ header h2:hover {
     left: 100%;
     border-right: none;
     border-top: 5px solid transparent;
-    border-left: 10px solid rgba(0, 210, 219, 0.5);
+    border-left: 10px solid #7996a7;
     border-bottom: 5px solid transparent;
 }
 
 /*Send message*/
 .send-message-form {
-    margin: 0 auto;
     width: 100%;
-    border: 3px solid #ff3758;
     border-top: none;
-    background-color: #0f6674;
-    border-radius: 0 0 10px 10px;
+    background-color: #2a4554;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .send-message-form .send-message-textarea {
@@ -231,7 +191,7 @@ header h2:hover {
 }
 
 ::placeholder {
-    color: white;
+    color: #e5e5e57d;
 }
 
 ::-webkit-scrollbar {
@@ -246,32 +206,14 @@ header h2:hover {
     font-size: 2rem;
 }
 
-/*footer*/
-footer {
-    display: flex;
-    background-color: #ff3758;
-    min-height: 50px;
-    justify-content: center;
-    align-items: center;
-    border-top: 3px solid white;
-    position: relative;
-    flex-grow: 0;
-}
-
-/*main content*/
-.main-content {
-    display: flex;
-    flex-direction: column;
-}
-
 .z-index {
     z-index: 9999;
 }
 
 /*media*/
-@media screen and (max-width: 500px) {
+/* @media screen and (max-width: 500px) {
     .chat-container {
         width: 95%;
     }
-}
+} */
 
