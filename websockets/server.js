@@ -6,7 +6,10 @@ const host = 'localhost';
 const port = '8000';
 
 const requestListener = (req, res) => {
-    fs.readFile(path.resolve(__dirname, 'src/index.html'), (err, data) => {
+    const contentPath = path.join(__dirname,
+        'src/', req.url === '/' ? 'index.html' : req.url);
+
+    fs.readFile(contentPath, (err, data) => {
         if (err) {
             res.writeHead(404);
             res.end(JSON.stringify(err));
