@@ -48,6 +48,26 @@ socket.onclose = (event) => {
     }
 };
 
+document.getElementById("submit").addEventListener("click", function(event){
+    event.preventDefault()
+
+    $.ajax({
+        type: 'POST',
+        url: '/auth',
+        data: {
+            user_id: user_id,
+            login: $('#login').val(),
+            password: $('#password').val()
+        },
+        success: (msg) => {
+            $(".alert-container").hide()
+        },
+        error: (msg) => {
+            alert('Wrong password')
+        }
+    })
+});
+
 // Срабатывает при ошибке
 socket.onerror = (error) => {
     console.log(`[error] ${error.message}`);

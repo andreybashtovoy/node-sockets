@@ -4,8 +4,10 @@ const WebSocketServer = require('ws');
 const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
+const bodyParser    = require('body-parser');
 
-// ініціалізація хоста для сервера
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
 
 app.use(express.static(path.join(__dirname + '/src/')));
 
@@ -13,7 +15,7 @@ app.get('/', function (request, response) {
     response.sendFile(__dirname + '/src/index.html');
 });
 
-app.post("/auth", urlencodedParser, function (request, response) {
+app.post("/auth", function (request, response) {
     if (!request.body) return response.sendStatus(400);
 
     if(check_user(request.body.user_id, request.body.login, request.body.password)){
@@ -67,7 +69,6 @@ webSocketServer.on('connection', function (ws) {
 
             // якщо користувач відправив повідомлення у чат
             if (data.action === 'chat_message') {
-                check_user(data.user_id); // Додавання користувача у масив, якщо його там нема
 
                 // Додавання повідомлення у масив
                 MESSAGES.push({
@@ -93,12 +94,13 @@ webSocketServer.on('connection', function (ws) {
 
 // перевіряє чи існує юзер зі своїм ID, якщо ні, то створити нового
 const check_user = (user_id, login, password) => {
-    if (!(user_id in USERS)) {
+    if (!(user_id in USERS) || USERS[user_id].name !== login) {
         USERS[user_id] = {
             name: login,
             password: password,
             avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
         };
+        console.log(USERS)
         return true;
     } else {
         return(USERS[user_id].password === password);
