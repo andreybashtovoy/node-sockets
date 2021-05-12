@@ -1,0 +1,260 @@
+* {
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+*, *:before, *:after {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+:focus, :active {
+    outline: none;
+}
+
+
+
+.alert-container{
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1d1d1dcc;
+}
+
+.alert{
+    background-color: #49616f;
+    padding: 20px;
+    font-size: 2rem;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.alert p{
+    font-family: "Roboto", serif;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 5px black;
+}
+
+.alert input{
+    width: 100%;
+    padding: 5px;
+    border-radius: 5px;
+
+}
+
+.alert input[type='submit']{
+    background-color: #faa918;
+    color: white;
+    font-size: 1.2rem;
+}
+
+
+
+a:focus, a:active {
+    outline: none;
+}
+
+nav, footer, header, aside {
+    display: block;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    line-height: 1;
+    font-size: 14px;
+    -ms-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+input, button, textarea {
+    font-family: inherit;
+}
+
+input::-ms-clear {
+    display: none;
+}
+
+button {
+    cursor: pointer;
+}
+
+button::-moz-focus-inner {
+    padding: 0;
+    border: 0;
+}
+
+a, a:visited {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+ul li {
+    list-style: none;
+}
+
+img {
+    vertical-align: top;
+}
+
+* {
+    font-family: 'NanamiRoundedW01-Medium';
+}
+
+
+/*chat-container*/
+.chat-container {
+    width: 100%;
+    background-color: #4e5a61;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px #3c3c3c;
+}
+
+.container {
+    flex-grow: 1;
+    width: 100%;
+    background-color: #4e5a61;
+}
+
+/*chat*/
+.chat {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    width: 100%;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    height: calc(100vh - 60px);
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+
+/*message*/
+.message {
+    z-index: 999999;
+    margin: 5px;
+    display: flex;
+    align-items: flex-end;
+    max-width: calc(90% - 53px);
+}
+
+/*message img*/
+.message img {
+    border-radius: 50%;
+}
+
+/*message content*/
+.message .content {
+    position: relative;
+    margin-left: 10px;
+    color: white;
+    padding: 5px;
+    background-color: #7996a7;
+    border-radius: 8px;
+    #box-shadow: 2px 2px 5px 1px black;
+}
+
+.message h3{
+    color: #191f21 !important;
+    text-shadow: 0 0 1px #868686;
+}
+
+.message .content p {
+    font-family: "Roboto", serif;
+    font-size: 16px;
+}
+
+.message .content:before {
+    content: "";
+    position: absolute;
+    bottom: 20px;
+    right: 100%;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-right: 10px solid #7996a7;
+    border-bottom: 5px solid transparent;
+}
+
+/*my message*/
+.my {
+    flex-direction: row-reverse;
+    align-self: flex-end;
+}
+
+.my .content {
+    background-color: #7996a7;
+    margin-left: 0;
+    margin-right: 10px;
+}
+
+.my .content:before {
+    left: 100%;
+    border-right: none;
+    border-top: 5px solid transparent;
+    border-left: 10px solid #7996a7;
+    border-bottom: 5px solid transparent;
+}
+
+/*Send message*/
+.send-message-form {
+    width: 100%;
+    border-top: none;
+    background-color: #2a4554;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.send-message-form .send-message-textarea {
+    display: inline-block;
+    resize: none;
+    box-sizing: border-box;
+    width: 90%;
+    font-size: 1.5rem;
+    background: none;
+    color: white;
+    padding: 5px;
+}
+
+::placeholder {
+    color: #e5e5e57d;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+.send-message-form .submit-button {
+    background: none;
+    color: white;
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+}
+
+.z-index {
+    z-index: 9999;
+}
+
+/*media*/
+/* @media screen and (max-width: 500px) {
+    .chat-container {
+        width: 95%;
+    }
+} */
+

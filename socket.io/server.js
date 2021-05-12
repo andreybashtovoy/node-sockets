@@ -1,38 +1,31 @@
-const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const WebSocketServer = require('ws');
+const express = require('express');
+const app = express();
+const server = require('http').createServer(app);
 
 // ініціалізація хоста для сервера
-const host = '0.0.0.0';
-const port = '8000';
 
-// функція обробки вхідних запросів с клієнта
-const requestListener = (req, res) => {
+app.use(express.static(path.join(__dirname + '/src/')));
 
-    // генерація URL в залежності від типу запрошуваного ресурсу
-    const contentPath = path.join(__dirname,
-        'src/', req.url === '/' ? 'index.html' : req.url);
-
-    // Читання даних з файлу та відправлення їх на клієнт у відповідь на запит
-    fs.readFile(contentPath, (err, data) => {
-        if (err) {
-            res.writeHead(404);
-            res.end(JSON.stringify(err));
-            return;
-        }
-
-        res.writeHead(200);
-        res.end(data);
-    });
-};
-
-// ініціалізація сервера
-const server = http.createServer(requestListener);
-
-server.listen(port, host, () => {
-    console.log(`Server is running on http://${host}:${port}`);
+app.get('/', function (request, response) {
+    response.sendFile(__dirname + '/src/index.html');
 });
+
+app.post("/auth", urlencodedParser, function (request, response) {
+    if (!request.body) return response.sendStatus(400);
+
+    if(check_user(request.body.user_id, request.body.login, request.body.password)){
+        response.sendStatus(200)
+    }else{
+        response.sendStatus(401)
+    }
+});
+
+const PORT = process.env.PORT || 8001;
+
+server.listen(PORT, () => console.log(`server started on ${PORT}`));
 
 // подключённые клиенты
 const clients = {};
@@ -59,14 +52,14 @@ const MESSAGES = [];
 const USERS = {};
 
 // обробка ініціалізації сокету
-webSocketServer.on('connection', function(ws) {
+webSocketServer.on('connection', function (ws) {
 
     const id = Math.random(); // Генеруємо ID нового підключення
     clients[id] = ws; // Додаємо нове підключення в об'єкт клієнтів
     console.log('новое соединение ' + id);
 
     // обробка вхідного повідомлення
-    ws.on('message', function(message) {
+    ws.on('message', function (message) {
         console.log('получено сообщение ' + message);
 
         try {
@@ -91,7 +84,7 @@ webSocketServer.on('connection', function(ws) {
     });
 
     // коли користувач закрив вкладку
-    ws.on('close', function() {
+    ws.on('close', function () {
         console.log('соединение закрыто ' + id);
         delete clients[id];
     });
@@ -99,12 +92,16 @@ webSocketServer.on('connection', function(ws) {
 });
 
 // перевіряє чи існує юзер зі своїм ID, якщо ні, то створити нового
-const check_user = (user_id) => {
+const check_user = (user_id, login, password) => {
     if (!(user_id in USERS)) {
         USERS[user_id] = {
-            name: NAMES[Math.floor(Math.random() * NAMES.length)],
+            name: login,
+            password: password,
             avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
         };
+        return true;
+    } else {
+        return(USERS[user_id].password === password);
     }
 };
 
