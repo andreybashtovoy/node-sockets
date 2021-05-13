@@ -4,38 +4,44 @@ const WebSocketServer = require('ws');
 const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
-const bodyParser    = require('body-parser');
+const bodyParser = require('body-parser');
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+const {Server} = require('socket.io');
+
+const io = new Server(server);
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(express.static(path.join(__dirname + '/src/')));
 
-app.get('/', function (request, response) {
+app.get('/', function(request, response) {
     response.sendFile(__dirname + '/src/index.html');
 });
 
-app.post("/auth", function (request, response) {
+app.post('/auth', function(request, response, next) {
     if (!request.body) return response.sendStatus(400);
 
-    if(check_user(request.body.user_id, request.body.login, request.body.password)){
-        response.sendStatus(200)
-    }else{
-        response.sendStatus(401)
+    if (check_user(request.body.user_id, request.body.login,
+        request.body.password)) {
+        response.sendStatus(200);
+        next();
+    } else {
+        response.sendStatus(401);
     }
 });
 
 const PORT = process.env.PORT || 8001;
 
-server.listen(PORT, () => console.log(`server started on ${PORT}`));
+// server.listen(PORT, () => console.log(`server started on ${PORT}`));
 
 // подключённые клиенты
 const clients = {};
 
 // WebSocket-сервер на порту 8081
-const webSocketServer = new WebSocketServer.Server({
-    port: 3001,
-});
+// const webSocketServer = new WebSocketServer.Server({
+//     port: 3001,
+// });
 
 // ніки та аватарки юзерів
 const NAMES = ['Семён', 'Анатолий', 'Олег', 'Калыван', 'Валера', 'Джейтери'];
@@ -53,43 +59,43 @@ const AVATARS = [
 const MESSAGES = [];
 const USERS = {};
 
-// обробка ініціалізації сокету
-webSocketServer.on('connection', function (ws) {
-
+io.on('connection', (socket) => {
     const id = Math.random(); // Генеруємо ID нового підключення
-    clients[id] = ws; // Додаємо нове підключення в об'єкт клієнтів
+    clients[id] = socket; // Додаємо нове підключення в об'єкт клієнтів
     console.log('новое соединение ' + id);
 
-    // обробка вхідного повідомлення
-    ws.on('message', function (message) {
-        console.log('получено сообщение ' + message);
+    socket.on('new message', event => {
+        const data = JSON.parse(event);
+        // якщо користувач відправив повідомлення у чат
+        if (data.action === 'chat_message') {
 
-        try {
-            let data = JSON.parse(message);
+            // Додавання повідомлення у масив
+            MESSAGES.push({
+                text: data.message,
+                user_id: data.user_id,
+            });
 
-            // якщо користувач відправив повідомлення у чат
-            if (data.action === 'chat_message') {
-
-                // Додавання повідомлення у масив
-                MESSAGES.push({
-                    text: data.message,
-                    user_id: data.user_id,
-                });
-
-                send_chat(); // Відправка нового стану чату усім користувачам
-            } else if (data.action === 'send_chat') { // Якщо користувач запросив всі повідомлення чату
-                send_chat(); // Відправка нового стану чату усім користувачам
-            }
-        } catch (e) {
+            send_chat(); // Відправка нового стану чату усім користувачам
+        } else if (data.action === 'send_chat') { // Якщо користувач запросив всі повідомлення чату
+            console.log('гони чат пидор')
+            send_chat(); // Відправка нового стану чату усім користувачам
         }
     });
 
+    // обробка вхідного повідомлення
+    socket.on('message', function(message) {
+        console.log('получено сообщение ' + message);
+    });
+
     // коли користувач закрив вкладку
-    ws.on('close', function () {
+    socket.on('disconnecting', function() {
         console.log('соединение закрыто ' + id);
         delete clients[id];
     });
+});
 
+server.listen(PORT, () => {
+    console.log('listening on: *:', PORT);
 });
 
 // перевіряє чи існує юзер зі своїм ID, якщо ні, то створити нового
@@ -100,10 +106,10 @@ const check_user = (user_id, login, password) => {
             password: password,
             avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
         };
-        console.log(USERS)
+        console.log(USERS);
         return true;
     } else {
-        return(USERS[user_id].password === password);
+        return (USERS[user_id].password === password);
     }
 };
 

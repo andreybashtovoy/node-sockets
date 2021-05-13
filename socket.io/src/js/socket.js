@@ -1,25 +1,24 @@
 // Генерация ID пользователя на стороне клиента
 let user_id = Math.ceil(Math.random() * 999999).toString(16);
 
+const socket = io();
+
 // Инициализация WebSocket с указанием хоста и порта сервера
-let socket = new WebSocket('ws://localhost:3001');
 
 // Срабатывает при успешном открытии соединения с сервером
-socket.onopen = () => {
+socket.on('connect', () => {
     console.log('[open] Соединение установлено');
-
     // Отправляем на сервер запрос с просьбой отправить все сообщения из чата
-    socket.send(JSON.stringify({
-        'action': 'send_chat',
+    socket.emit('new message', JSON.stringify({
+        action: 'send_chat',
     }));
-};
-
+});
 
 // Срабатывает при получении данных из сервера
-socket.onmessage = (event) => {
-    console.log(`[message] Данные получены с сервера: ${event.data}`);
+socket.on('message', event => {
+    console.log(`[message] Данные получены с сервера: ${event}`);
 
-    let data = JSON.parse(event.data);
+    let data = JSON.parse(event);
 
     //Если сервер прислал все сообщения из чата
     if (data.action === 'all_messages') {
@@ -35,8 +34,7 @@ socket.onmessage = (event) => {
             }
         }
     }
-};
-
+});
 
 // Срабатывает при закрытии соединения с сервером
 socket.onclose = (event) => {
@@ -48,8 +46,8 @@ socket.onclose = (event) => {
     }
 };
 
-document.getElementById("submit").addEventListener("click", function(event){
-    event.preventDefault()
+document.getElementById('submit').addEventListener('click', function(event) {
+    event.preventDefault();
 
     $.ajax({
         type: 'POST',
@@ -57,22 +55,21 @@ document.getElementById("submit").addEventListener("click", function(event){
         data: {
             user_id: user_id,
             login: $('#login').val(),
-            password: $('#password').val()
+            password: $('#password').val(),
         },
         success: (msg) => {
-            $(".alert-container").hide()
+            $('.alert-container').hide();
         },
         error: (msg) => {
-            alert('Wrong password')
-        }
-    })
+            alert('Wrong password');
+        },
+    });
 });
 
 // Срабатывает при ошибке
 socket.onerror = (error) => {
     console.log(`[error] ${error.message}`);
 };
-
 
 // Объявление переменных для работы с DOM
 let block = document.querySelector('.chat');
@@ -84,7 +81,6 @@ const default_textarea = textarea.height();
 
 const sendMessageTextarea = $('.send-message-textarea');
 
-
 // Срабатывает при отправке сообщения пользователем
 $('.send-message-form').submit((event) => {
     event.preventDefault();
@@ -92,7 +88,7 @@ $('.send-message-form').submit((event) => {
         if (!$('.send-message-textarea').val()) return;
 
         // Отправка
-        socket.send(JSON.stringify({
+        socket.emit('new message', JSON.stringify({
             action: 'chat_message',
             message: sendMessageTextarea.val(),
             user_id: user_id,
@@ -104,7 +100,6 @@ $('.send-message-form').submit((event) => {
     }
 });
 
-
 // Для возможности отправки сообщения через Enter
 textarea.keydown((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -112,7 +107,6 @@ textarea.keydown((e) => {
         $('.send-message-form').submit();
     }
 });
-
 
 // Добавляет сообщение в чат
 const apppend_message = (text, name, avatar, my = true) => {
