@@ -58,7 +58,11 @@ document.getElementById('submit').addEventListener('click', function(event) {
             password: $('#password').val(),
         },
         success: (msg) => {
+            user_id = msg;
             $('.alert-container').hide();
+            socket.emit('new message', JSON.stringify({
+                action: 'send_chat',
+            }));
         },
         error: (msg) => {
             alert('Wrong password');

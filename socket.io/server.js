@@ -22,9 +22,11 @@ app.get('/', function(request, response) {
 app.post('/auth', function(request, response, next) {
     if (!request.body) return response.sendStatus(400);
 
-    if (check_user(request.body.user_id, request.body.login,
-        request.body.password)) {
-        response.sendStatus(200);
+    let user_id = check_user(request.body.user_id, request.body.login,
+        request.body.password)
+
+    if (user_id) {
+        response.send(user_id)
         next();
     } else {
         response.sendStatus(401);
@@ -77,7 +79,6 @@ io.on('connection', (socket) => {
 
             send_chat(); // Відправка нового стану чату усім користувачам
         } else if (data.action === 'send_chat') { // Якщо користувач запросив всі повідомлення чату
-            console.log('гони чат пидор')
             send_chat(); // Відправка нового стану чату усім користувачам
         }
     });
@@ -100,18 +101,30 @@ server.listen(PORT, () => {
 
 // перевіряє чи існує юзер зі своїм ID, якщо ні, то створити нового
 const check_user = (user_id, login, password) => {
-    if (!(user_id in USERS) || USERS[user_id].name !== login) {
+    let login_id = login_exists(login)
+
+    if (!login_id) {
         USERS[user_id] = {
             name: login,
             password: password,
             avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
         };
-        console.log(USERS);
-        return true;
+        return user_id;
     } else {
-        return (USERS[user_id].password === password);
+        if(USERS[login_id].password === password){
+            return login_id;
+        }
+        return false
     }
 };
+
+const login_exists = (login) => {
+    for(let user_id in USERS){
+        if(USERS[user_id].name === login)
+            return user_id;
+    }
+    return false;
+}
 
 // Відправка всіх повідомлень у чаті усім користувачам
 const send_chat = () => {
