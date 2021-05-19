@@ -9,29 +9,24 @@ const socket = io();
 socket.on('connect', () => {
     console.log('[open] Соединение установлено');
     // Отправляем на сервер запрос с просьбой отправить все сообщения из чата
-    socket.emit('new message', JSON.stringify({
-        action: 'send_chat',
-    }));
+    socket.emit('send_chat');
 });
 
-// Срабатывает при получении данных из сервера
-socket.on('message', event => {
+//Если сервер прислал все сообщения из чата
+socket.on('all_messages', event => {
     console.log(`[message] Данные получены с сервера: ${event}`);
 
-    let data = JSON.parse(event);
+    let messages = JSON.parse(event);
 
-    //Если сервер прислал все сообщения из чата
-    if (data.action === 'all_messages') {
-        $('.chat').empty(); // Очищаем чат
-        for (let i in data.messages) { // В цикле выводим все сообщения в чат
-            if (data.messages.hasOwnProperty(i)) {
-                apppend_message(
-                    data.messages[i].text,
-                    data.messages[i].name,
-                    data.messages[i].avatar,
-                    data.messages[i].user_id === user_id,
-                );
-            }
+    $('.chat').empty(); // Очищаем чат
+    for (let i in messages) { // В цикле выводим все сообщения в чат
+        if (messages.hasOwnProperty(i)) {
+            apppend_message(
+                messages[i].text,
+                messages[i].name,
+                messages[i].avatar,
+                messages[i].user_id === user_id,
+            );
         }
     }
 });
@@ -60,12 +55,13 @@ document.getElementById('submit').addEventListener('click', function(event) {
         success: (msg) => {
             user_id = msg;
             $('.alert-container').hide();
-            socket.emit('new message', JSON.stringify({
-                action: 'send_chat',
-            }));
+            socket.emit('send_chat');
         },
-        error: (msg) => {
-            alert('Wrong password');
+        complete: (xhr) => {
+            if(xhr.status === 401)
+                alert('Wrong password');
+            else if(xhr.status === 400)
+                alert('Fields must not be empty')
         },
     });
 });
@@ -92,8 +88,7 @@ $('.send-message-form').submit((event) => {
         if (!$('.send-message-textarea').val()) return;
 
         // Отправка
-        socket.emit('new message', JSON.stringify({
-            action: 'chat_message',
+        socket.emit('chat_message', JSON.stringify({
             message: sendMessageTextarea.val(),
             user_id: user_id,
         }));

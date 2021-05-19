@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const WebSocketServer = require('ws');
 const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
@@ -13,40 +12,42 @@ const io = new Server(server);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+// Задаємо директорію src/ як статичну, щоб до всіх її файлів був доступ по запиту
 app.use(express.static(path.join(__dirname + '/src/')));
 
+// При запиті на сервер на роут / повертаємо головну сторінку чату
 app.get('/', function(request, response) {
     response.sendFile(__dirname + '/src/index.html');
 });
 
+// При запиті на роут /auth опрацьовуємо авторизацію користувачів
 app.post('/auth', function(request, response, next) {
     if (!request.body) return response.sendStatus(400);
 
+    if(request.body.login === "" || request.body.password === ""){
+        return response.sendStatus(400);
+    }
+
+    // Перевіряємо, чи існує користувач. Якщо так, переевіряємо пароль
     let user_id = check_user(request.body.user_id, request.body.login,
         request.body.password)
 
+    // Якщо  користувач не існував або паролі співпали
     if (user_id) {
         response.send(user_id)
         next();
-    } else {
+    } else { // Якщо паролі не співпали
         response.sendStatus(401);
     }
 });
 
+// Задаємо порт серверу
 const PORT = process.env.PORT || 8001;
 
-// server.listen(PORT, () => console.log(`server started on ${PORT}`));
-
-// подключённые клиенты
+// Об'єкт підключених клієнтів
 const clients = {};
 
-// WebSocket-сервер на порту 8081
-// const webSocketServer = new WebSocketServer.Server({
-//     port: 3001,
-// });
-
-// ніки та аватарки юзерів
-const NAMES = ['Семён', 'Анатолий', 'Олег', 'Калыван', 'Валера', 'Джейтери'];
+// Масив з посиланнями на можливі аватари користувачів
 const AVATARS = [
     '/avatars/1.jpg',
     '/avatars/2.jpg',
@@ -66,21 +67,21 @@ io.on('connection', (socket) => {
     clients[id] = socket; // Додаємо нове підключення в об'єкт клієнтів
     console.log('новое соединение ' + id);
 
-    socket.on('new message', event => {
+    // якщо користувач відправив повідомлення у чат
+    socket.on('chat_message', event => {
         const data = JSON.parse(event);
-        // якщо користувач відправив повідомлення у чат
-        if (data.action === 'chat_message') {
 
-            // Додавання повідомлення у масив
-            MESSAGES.push({
-                text: data.message,
-                user_id: data.user_id,
-            });
+        // Додавання повідомлення у масив
+        MESSAGES.push({
+            text: data.message,
+            user_id: data.user_id,
+        });
 
-            send_chat(); // Відправка нового стану чату усім користувачам
-        } else if (data.action === 'send_chat') { // Якщо користувач запросив всі повідомлення чату
-            send_chat(); // Відправка нового стану чату усім користувачам
-        }
+        send_chat(socket); // Відправка нового стану чату усім користувачам
+    });
+
+    socket.on('send_chat', event => {
+        send_chat(socket); // Відправка нового стану чату усім користувачам
     });
 
     // обробка вхідного повідомлення
@@ -99,7 +100,7 @@ server.listen(PORT, () => {
     console.log('listening on: *:', PORT);
 });
 
-// перевіряє чи існує юзер зі своїм ID, якщо ні, то створити нового
+// перевіряє чи існує юзер з таким логіном, якщо ні, то створити нового
 const check_user = (user_id, login, password) => {
     let login_id = login_exists(login)
 
@@ -118,6 +119,7 @@ const check_user = (user_id, login, password) => {
     }
 };
 
+// Перевіряє, чи існує користувач з заданим логіном
 const login_exists = (login) => {
     for(let user_id in USERS){
         if(USERS[user_id].name === login)
@@ -127,7 +129,7 @@ const login_exists = (login) => {
 }
 
 // Відправка всіх повідомлень у чаті усім користувачам
-const send_chat = () => {
+const send_chat = (socket) => {
 
     let chat = [];
 
@@ -142,10 +144,5 @@ const send_chat = () => {
     }
 
     // Для кожного клієнту з масиву відправляемо поточний стан чату
-    for (let key in clients) {
-        clients[key].send(JSON.stringify({
-            action: 'all_messages',
-            messages: chat,
-        }));
-    }
+    socket.emit("all_messages", JSON.stringify(chat));
 };
