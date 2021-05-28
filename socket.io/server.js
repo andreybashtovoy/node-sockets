@@ -9,6 +9,9 @@ const {Server} = require('socket.io');
 
 const io = new Server(server);
 
+const fileURL = path.join(__dirname, 'users.json');
+const messagesURL = path.join(__dirname, 'messages.json');
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -24,17 +27,17 @@ app.get('/', function(request, response) {
 app.post('/auth', function(request, response, next) {
     if (!request.body) return response.sendStatus(400);
 
-    if(request.body.login === "" || request.body.password === ""){
+    if (request.body.login === '' || request.body.password === '') {
         return response.sendStatus(400);
     }
 
     // Перевіряємо, чи існує користувач. Якщо так, переевіряємо пароль
-    let user_id = check_user(request.body.user_id, request.body.login,
-        request.body.password)
+    let user = check_user(request.body.user_id, request.body.login,
+        request.body.password);
 
     // Якщо  користувач не існував або паролі співпали
-    if (user_id) {
-        response.send(user_id)
+    if (user) {
+        response.send(user.user_id);
         next();
     } else { // Якщо паролі не співпали
         response.sendStatus(401);
@@ -58,10 +61,6 @@ const AVATARS = [
     '/avatars/7.jpg',
 ];
 
-// активні юзери та повідомлення в чаті
-const MESSAGES = [];
-const USERS = {};
-
 io.on('connection', (socket) => {
     const id = Math.random(); // Генеруємо ID нового підключення
     clients[id] = socket; // Додаємо нове підключення в об'єкт клієнтів
@@ -71,16 +70,25 @@ io.on('connection', (socket) => {
     socket.on('chat_message', event => {
         const data = JSON.parse(event);
 
-        // Додавання повідомлення у масив
-        MESSAGES.push({
+        const newMessage = {
             text: data.message,
             user_id: data.user_id,
-        });
+        };
+
+        // Додавання повідомлення у файл
+        try {
+            const messages = JSON.parse(fs.readFileSync(messagesURL, 'utf8'));
+            messages.push(newMessage);
+
+            fs.writeFileSync(messagesURL, JSON.stringify(messages));
+        } catch (e) {
+            fs.writeFileSync(messagesURL, JSON.stringify([newMessage]));
+        }
 
         send_chat(socket); // Відправка нового стану чату усім користувачам
     });
 
-    socket.on('send_chat', event => {
+    socket.on('send_chat', () => {
         send_chat(socket); // Відправка нового стану чату усім користувачам
     });
 
@@ -102,47 +110,103 @@ server.listen(PORT, () => {
 
 // перевіряє чи існує юзер з таким логіном, якщо ні, то створити нового
 const check_user = (user_id, login, password) => {
-    let login_id = login_exists(login)
+    let user = login_exists(login);
 
-    if (!login_id) {
-        USERS[user_id] = {
+    if (!user) {
+        const newUser = {
+            user_id,
             name: login,
-            password: password,
+            password,
             avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
         };
-        return user_id;
+
+        createNewUser(newUser);
+
+        return newUser;
     } else {
-        if(USERS[login_id].password === password){
-            return login_id;
+        if (user.password === password) {
+            return user;
         }
-        return false
+        return false;
     }
+};
+
+// створення нового юзера та запис його у файл
+const createNewUser = (userData) => {
+    fs.readFile(fileURL, 'utf8', (err, data) => {
+        if (err) {
+            fs.writeFile(fileURL, JSON.stringify([userData]), (err) => {
+                if (err) {
+                    throw new Error('something went wrong');
+                }
+            });
+
+            return;
+        }
+
+        const dataArr = JSON.parse(data);
+        dataArr.push(userData);
+
+        fs.writeFile(fileURL, JSON.stringify(dataArr), err => {
+            if (err) {
+                throw new Error('something went wrong');
+            }
+        });
+    });
 };
 
 // Перевіряє, чи існує користувач з заданим логіном
 const login_exists = (login) => {
-    for(let user_id in USERS){
-        if(USERS[user_id].name === login)
-            return user_id;
+    let user = null;
+
+    // зчитування користувачів з файлу та перевірка існування
+    try {
+        const data = fs.readFileSync(fileURL, 'utf8');
+        const users = JSON.parse(data);
+
+        users.forEach((item) => {
+            if (item.name === login) {
+                user = item;
+            }
+        });
+    } catch (e) {
     }
-    return false;
-}
+
+    return user;
+};
 
 // Відправка всіх повідомлень у чаті усім користувачам
-const send_chat = (socket) => {
+const send_chat = () => {
 
     let chat = [];
+    let MESSAGES = [];
+
+    // Зчитуємо усі повідомлення з файлу
+    try {
+        MESSAGES = JSON.parse(fs.readFileSync(messagesURL, 'utf8'));
+    } catch (e) {
+    }
 
     // Збираємо масив усіх повідомлень для подальшої відправки
     for (let message of MESSAGES) {
+        const user = findUser('user_id', message.user_id);
+
         chat.push({
             'text': message.text,
-            'avatar': USERS[message.user_id].avatar,
-            'name': USERS[message.user_id].name,
+            'avatar': user.avatar,
+            'name': user.name,
             'user_id': message.user_id,
         });
     }
 
     // Для кожного клієнту з масиву відправляемо поточний стан чату
-    socket.emit("all_messages", JSON.stringify(chat));
+    io.emit('all_messages', JSON.stringify(chat));
 };
+
+const findUser = (prop, value) => {
+    const data = fs.readFileSync(fileURL, 'utf8');
+    const users = JSON.parse(data);
+
+    return users.find(item => item[prop] === value) || null;
+};
+

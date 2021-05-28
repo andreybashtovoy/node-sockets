@@ -1,6 +1,5 @@
 // Генерация ID пользователя на стороне клиента
 let user_id = Math.ceil(Math.random() * 999999).toString(16);
-
 const socket = io();
 
 // Инициализация WebSocket с указанием хоста и порта сервера
@@ -83,6 +82,7 @@ const sendMessageTextarea = $('.send-message-textarea');
 
 // Срабатывает при отправке сообщения пользователем
 $('.send-message-form').submit((event) => {
+    console.log(user_id);
     event.preventDefault();
     if (/\S/.test(sendMessageTextarea.val())) {
         if (!$('.send-message-textarea').val()) return;
